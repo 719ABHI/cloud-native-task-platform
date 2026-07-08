@@ -5,6 +5,12 @@ import com.abhishek.taskmanagementbackend.entity.TaskStatus;
 
 import java.time.LocalDate;
 
+/**
+ * DTO used to receive task creation/update requests
+ * from the client.
+ * This class contains only the fields that the client
+ * is allowed to send.
+ */
 public class TaskRequest {
 
     private String title;
