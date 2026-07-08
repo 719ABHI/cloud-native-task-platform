@@ -2,6 +2,8 @@
 
 ## Goal
 
+Improve the API architecture by introducing DTOs.
+
 ## DTO (Data Transfer Object)
 
 ### Definition
@@ -54,13 +56,26 @@ Client
 - ✅ Refactored Create Task API to use DTOs
 - ✅ Refactored Get All Tasks API to use DTOs
 - ✅ Refactored Get Task By ID API
+- ✅ Refactored Update Task API to use DTOs
+- ✅ Introduced reusable mapping methods
 
 ## Concepts Learned
+- DTO (Data Transfer Object)
+- Entity vs DTO
+- Mapping
+- Why DTO improves API design
+
 
 ## Files Modified
+- TaskController.java
+- TaskService.java
+- TaskServiceImpl.java
+- TaskRequest.java
+- TaskResponse.java
 
 ## API Changes
 
 ## Interview Notes
 
 ## Outcome
+Successfully separated the API contract from the database model using DTOs.
