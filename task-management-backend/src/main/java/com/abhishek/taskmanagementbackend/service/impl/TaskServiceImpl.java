@@ -1,6 +1,7 @@
 package com.abhishek.taskmanagementbackend.service.impl;
 
 import com.abhishek.taskmanagementbackend.entity.Task;
+import com.abhishek.taskmanagementbackend.exception.TaskNotFoundException;
 import com.abhishek.taskmanagementbackend.repository.TaskRepository;
 import com.abhishek.taskmanagementbackend.service.TaskService;
 import org.springframework.stereotype.Service;
@@ -9,6 +10,9 @@ import com.abhishek.taskmanagementbackend.dto.TaskResponse;
 
 import java.util.ArrayList;
 import java.util.List;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 
 
 /**
@@ -19,6 +23,9 @@ import java.util.List;
  */
 @Service
 public class TaskServiceImpl implements TaskService {
+
+    private static final Logger logger =
+            LoggerFactory.getLogger(TaskServiceImpl.class);
 
     private final TaskRepository taskRepository;
     // Constructor Injection for TaskRepository.
@@ -80,6 +87,8 @@ public class TaskServiceImpl implements TaskService {
 
         Task savedTask = taskRepository.save(task);
 
+        logger.info("Task created successfully with ID: {}", savedTask.getId());
+
         return mapToResponse(savedTask);
     }
 
@@ -90,6 +99,8 @@ public class TaskServiceImpl implements TaskService {
     @Override
     public List<TaskResponse> getAllTasks() {
 
+        logger.info("Fetching all tasks");
+
         List<Task> tasks = taskRepository.findAll();
 
         List<TaskResponse> responses = new ArrayList<>();
@@ -97,6 +108,8 @@ public class TaskServiceImpl implements TaskService {
         for (Task task : tasks) {
             responses.add(mapToResponse(task));
         }
+
+        logger.info("Retrieved {} tasks", responses.size());
 
         return responses;
     }
@@ -109,8 +122,10 @@ public class TaskServiceImpl implements TaskService {
     @Override
     public TaskResponse getTaskById(Long id) {
 
+        logger.info("Fetching task with ID: {}", id);
+
         Task existingTask = taskRepository.findById(id)
-                .orElseThrow();
+                .orElseThrow(() -> new TaskNotFoundException(id));
 
         return mapToResponse(existingTask);
     }
@@ -118,8 +133,11 @@ public class TaskServiceImpl implements TaskService {
     @Override
     public TaskResponse updateTask(Long id, TaskRequest request) {
 
+        logger.info("Updating task with ID: {}", id);
         Task existingTask = taskRepository.findById(id)
-                .orElseThrow();
+                .orElseThrow(() -> new TaskNotFoundException(id));
+
+
 
         existingTask.setTitle(request.getTitle());
         existingTask.setDescription(request.getDescription());
@@ -129,15 +147,19 @@ public class TaskServiceImpl implements TaskService {
 
         Task updatedTask = taskRepository.save(existingTask);
 
+        logger.info("Task updated successfully with ID: {}", updatedTask.getId());
         return mapToResponse(updatedTask);
     }
 
     @Override
     public void deleteTask(Long id) {
 
+        logger.info("Deleting task with ID: {}", id);
         Task existingTask = taskRepository.findById(id)
-                .orElseThrow();
+                .orElseThrow(() -> new TaskNotFoundException(id));
+
 
         taskRepository.delete(existingTask);
+        logger.info("Task deleted successfully with ID: {}", id);
     }
 }

@@ -1,0 +1,12 @@
+# IntelliJ IDEA
+.idea/
+
+# Gradle
+.gradle/
+build/
+
+# VS Code
+.vscode/
+
+# OS
+.DS_Store
