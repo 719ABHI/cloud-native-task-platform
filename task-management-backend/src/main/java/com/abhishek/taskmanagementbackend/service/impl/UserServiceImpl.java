@@ -8,6 +8,9 @@ import com.abhishek.taskmanagementbackend.repository.UserRepository;
 import com.abhishek.taskmanagementbackend.service.UserService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import com.abhishek.taskmanagementbackend.dto.LoginRequest;
+import com.abhishek.taskmanagementbackend.dto.LoginResponse;
+import com.abhishek.taskmanagementbackend.exception.InvalidCredentialsException;
 
 /**
  * Implements business logic related to user management.
@@ -18,7 +21,8 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
-    public UserServiceImpl(UserRepository userRepository,PasswordEncoder passwordEncoder) {
+    public UserServiceImpl(UserRepository userRepository,
+                           PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
     }
@@ -34,8 +38,6 @@ public class UserServiceImpl implements UserService {
         user.setUsername(request.getUsername());
         user.setEmail(request.getEmail());
 
-        // Temporary: password is stored as plain text.
-        // BCrypt hashing will be introduced in the next story.
         // Store the BCrypt hash instead of the plain-text password.
         user.setPassword(passwordEncoder.encode(request.getPassword()));
 
@@ -44,7 +46,6 @@ public class UserServiceImpl implements UserService {
 
         return user;
     }
-
     /**
      * Converts a User entity into a UserResponse DTO
      * to avoid exposing sensitive information.
@@ -78,5 +79,29 @@ public class UserServiceImpl implements UserService {
         User savedUser = userRepository.save(user);
 
         return mapToResponse(savedUser);
+    }
+
+    /**
+     * Authenticates a user by verifying the email
+     * and matching the provided password.
+     */
+    @Override
+    public LoginResponse loginUser(LoginRequest request) {
+
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() ->
+                        new InvalidCredentialsException("Invalid email or password"));
+
+        if (!passwordEncoder.matches(
+                request.getPassword(),
+                user.getPassword())) {
+
+            throw new InvalidCredentialsException("Invalid email or password");
+        }
+
+        LoginResponse response = new LoginResponse();
+        response.setMessage("Login Successful");
+
+        return response;
     }
 }

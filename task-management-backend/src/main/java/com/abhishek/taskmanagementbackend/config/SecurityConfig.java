@@ -18,6 +18,11 @@ import org.springframework.security.web.SecurityFilterChain;
 @Configuration
 public class SecurityConfig {
 
+
+    /**
+     * Creates a BCrypt PasswordEncoder bean used
+     * to securely hash user passwords before storing them.
+     */
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
@@ -27,10 +32,7 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
 
-        /**
-         * Creates a BCrypt PasswordEncoder bean used
-         * to securely hash user passwords before storing them.
-         */
+
 
 
         http
