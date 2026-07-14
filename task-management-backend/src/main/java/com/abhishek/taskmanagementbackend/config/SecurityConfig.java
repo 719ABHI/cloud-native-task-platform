@@ -7,7 +7,8 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-
+import com.abhishek.taskmanagementbackend.security.JwtAuthenticationFilter;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 /**
  * Configures Spring Security for the application.
 
@@ -19,6 +20,11 @@ import org.springframework.security.web.SecurityFilterChain;
 public class SecurityConfig {
 
 
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
+
+    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter) {
+        this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+    }
     /**
      * Creates a BCrypt PasswordEncoder bean used
      * to securely hash user passwords before storing them.
@@ -31,24 +37,34 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
-
-
-
-
         http
                 // Disable CSRF because this project exposes REST APIs.
                 // We'll use JWT instead of session-based authentication.
                 .csrf(csrf -> csrf.disable())
 
-                // Allow every request for now.
+                // Configure endpoint authorization rules.
                 .authorizeHttpRequests(auth -> auth
-                        .anyRequest().permitAll()
+
+                        // Public endpoints.
+                        .requestMatchers(
+                                "/api/auth/register",
+                                "/api/auth/login",
+                                "/swagger-ui/**",
+                                "/v3/api-docs/**"
+                        ).permitAll()
+
+                        // Every other endpoint requires authentication.
+                        .anyRequest().authenticated()
                 )
 
-                // Use Spring Security's default configuration.
+                // Register our JWT filter before Spring Security's
+                // default username/password authentication filter.
+                .addFilterBefore(
+                        jwtAuthenticationFilter,
+                        UsernamePasswordAuthenticationFilter.class
+                )
+
                 .httpBasic(Customizer.withDefaults());
-
-
         return http.build();
 
     }

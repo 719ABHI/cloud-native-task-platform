@@ -1,22 +1,31 @@
 package com.abhishek.taskmanagementbackend.dto;
 
 /**
- * DTO returned after a successful login.
- * Currently contains only a success message.
- * JWT tokens will be added in a later story.
+ * DTO returned after a successful authentication.
+ * Contains the JWT access token that the client
+ * must send with future requests.
  */
 public class LoginResponse {
 
-    private String message;
+    private String accessToken;
+    private String tokenType;
 
     public LoginResponse() {
     }
 
-    public String getMessage() {
-        return message;
+    public String getAccessToken() {
+        return accessToken;
     }
 
-    public void setMessage(String message) {
-        this.message = message;
+    public void setAccessToken(String accessToken) {
+        this.accessToken = accessToken;
+    }
+
+    public String getTokenType() {
+        return tokenType;
+    }
+
+    public void setTokenType(String tokenType) {
+        this.tokenType = tokenType;
     }
 }

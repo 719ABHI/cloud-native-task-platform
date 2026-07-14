@@ -5,6 +5,7 @@ import com.abhishek.taskmanagementbackend.dto.UserResponse;
 import com.abhishek.taskmanagementbackend.entity.Role;
 import com.abhishek.taskmanagementbackend.entity.User;
 import com.abhishek.taskmanagementbackend.repository.UserRepository;
+import com.abhishek.taskmanagementbackend.service.JwtService;
 import com.abhishek.taskmanagementbackend.service.UserService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -20,11 +21,14 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final JwtService jwtService;
 
     public UserServiceImpl(UserRepository userRepository,
-                           PasswordEncoder passwordEncoder) {
+                           PasswordEncoder passwordEncoder,
+                           JwtService jwtService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.jwtService = jwtService;
     }
 
     /**
@@ -99,8 +103,12 @@ public class UserServiceImpl implements UserService {
             throw new InvalidCredentialsException("Invalid email or password");
         }
 
+        // Generate a JWT after successful authentication.
+        String token = jwtService.generateToken(user.getEmail());
+
         LoginResponse response = new LoginResponse();
-        response.setMessage("Login Successful");
+        response.setAccessToken(token);
+        response.setTokenType("Bearer");
 
         return response;
     }
