@@ -1,301 +1,579 @@
-# Sprint 03 – Authentication & Authorization
+# Sprint 03 Notes – Authentication & Authorization
 
-| Item | Details |
-|------|---------|
-| **Sprint** | Sprint 03 |
-| **Status** | ✅ Completed |
-| **Focus Area** | Authentication & Authorization |
-| **Technologies** | Spring Security, JWT, BCrypt, Spring Boot, Spring Data JPA |
+> **Sprint Goal**
+>
+> Learn and implement authentication and authorization using Spring Security and JWT while understanding the architecture behind every component instead of simply writing code.
 
 ---
 
-## Objective
+# Story 1 – Introduction to Spring Security
 
-Implement a secure authentication and authorization system for the Cloud Native Task Management Platform using Spring Security and JWT. This sprint focused on protecting REST APIs, securing user credentials, and establishing the foundation for role-based access control.
+## What is Spring Security?
 
----
+Spring Security is a framework that provides security for Spring applications.
 
-## Features Implemented
+It handles:
 
-During this sprint, the following features were implemented:
+- Authentication
+- Authorization
+- Password Encryption
+- Protection against common attacks
+- Session Management
+- JWT Authentication
+- OAuth2 Authentication
 
-- Integrated Spring Security into the application.
-- Configured Spring Security using `SecurityFilterChain`.
-- Disabled CSRF for REST API communication.
-- Configured public and protected endpoints.
-- Implemented user registration.
-- Implemented user authentication (login).
-- Secured passwords using BCrypt hashing.
-- Generated JWT access tokens after successful authentication.
-- Validated JWT tokens for protected requests.
-- Implemented JWT authentication filter.
-- Protected all Task Management APIs using JWT authentication.
-- Established the foundation for role-based authorization.
+Instead of writing authentication logic ourselves, Spring Security provides a complete security infrastructure.
 
 ---
 
-## Implementation Summary
+# Authentication vs Authorization
 
-The backend application was enhanced with a complete authentication system based on Spring Security and JSON Web Tokens (JWT).
+This is one of the most common interview questions.
 
-A new User module was introduced to manage user registration and authentication. During registration, passwords are securely hashed using BCrypt before being stored in PostgreSQL. During login, credentials are validated and a JWT access token is generated upon successful authentication.
+## Authentication
 
-Every protected request is intercepted by a custom JWT authentication filter, which validates the token, loads the authenticated user, and stores the authentication information in the Spring Security context.
+Authentication answers:
 
-With these enhancements, the application now supports secure authentication while providing a scalable foundation for future authorization features.
+> **Who are you?**
+
+Example:
+
+```
+Username
+Password
+```
+
+Spring verifies the credentials.
+
+If correct:
+
+```
+Authenticated
+```
+
+Otherwise:
+
+```
+401 Unauthorized
+```
+
+Authentication verifies identity.
 
 ---
 
-## Architecture Changes
+## Authorization
 
-### Authentication Flow
+Authorization answers:
+
+> **What are you allowed to access?**
+
+Example:
+
+```
+User
+```
+
+Allowed
+
+```
+GET /tasks
+```
+
+Not Allowed
+
+```
+DELETE /users
+```
+
+Authorization checks permissions after authentication.
+
+---
+
+## Easy Way to Remember
+
+Authentication
+
+```
+Identity
+```
+
+Authorization
+
+```
+Permission
+```
+
+---
+
+# Why do we need Spring Security?
+
+Without Spring Security:
 
 ```
 Client
-   │
-   ▼
-Register/Login Request
-   │
-   ▼
-REST Controller
-   │
-   ▼
-Service Layer
-   │
-   ▼
-BCrypt Password Encoding / Verification
-   │
-   ▼
-User Repository
-   │
-   ▼
-PostgreSQL
+
+↓
+
+Controller
+
+↓
+
+Database
 ```
+
+Anyone can access the APIs.
 
 ---
 
-### JWT Authentication Flow
-
-```
-Client Login
-   │
-   ▼
-Authenticate User
-   │
-   ▼
-Generate JWT
-   │
-   ▼
-Return JWT
-   │
-   ▼
-Client Stores Token
-```
-
----
-
-### Protected Request Flow
+With Spring Security:
 
 ```
 Client
-   │
-Authorization: Bearer <JWT>
-   │
-   ▼
-JWT Authentication Filter
-   │
-   ▼
+
+↓
+
+Security Filter Chain
+
+↓
+
+Controller
+
+↓
+
+Database
+```
+
+Every request is checked before reaching the controller.
+
+---
+
+# Story 2 – SecurityFilterChain
+
+Spring Security uses a chain of filters.
+
+Every request passes through these filters before reaching the controller.
+
+```
+Request
+
+↓
+
+Filter 1
+
+↓
+
+Filter 2
+
+↓
+
+JWT Filter
+
+↓
+
+Controller
+```
+
+Every filter performs a specific responsibility.
+
+Examples:
+
+- Authentication
+- Authorization
+- CSRF
+- JWT Validation
+
+---
+
+## Why use a Filter?
+
+Imagine writing JWT validation inside every controller.
+
+```
+TaskController
+
+↓
+
 Validate JWT
-   │
-   ▼
-Load User Details
-   │
-   ▼
-SecurityContextHolder
-   │
-   ▼
-Protected Controller
+
+UserController
+
+↓
+
+Validate JWT
+
+AdminController
+
+↓
+
+Validate JWT
+```
+
+This duplicates code.
+
+Instead:
+
+```
+Request
+
+↓
+
+JWT Filter
+
+↓
+
+Controller
+```
+
+One filter.
+
+Every request.
+
+---
+
+# Story 3 – SecurityConfig
+
+Spring Security configuration lives inside:
+
+```
+SecurityConfig
+```
+
+Responsibilities:
+
+- Configure authentication
+- Configure authorization
+- Register custom filters
+- Configure PasswordEncoder
+- Configure public endpoints
+- Configure protected endpoints
+
+---
+
+## PasswordEncoder Bean
+
+We created
+
+```java
+@Bean
+public PasswordEncoder passwordEncoder() {
+    return new BCryptPasswordEncoder();
+}
+```
+
+### Why?
+
+Passwords should never be stored as plain text.
+
+Instead:
+
+```
+Password
+
+↓
+
+BCrypt
+
+↓
+
+Hash
+
+↓
+
+Database
 ```
 
 ---
 
-## Project Structure Updates
+## SecurityFilterChain Bean
 
-The following packages and classes were introduced during this sprint:
+We configured
 
+```java
+@Bean
+public SecurityFilterChain securityFilterChain(...)
 ```
-task-management-backend/
-│
-├── config/
-│   └── SecurityConfig.java
-│
-├── controller/
-│   └── UserController.java
-│
-├── dto/
-│   ├── RegisterRequest.java
-│   ├── LoginRequest.java
-│   ├── LoginResponse.java
-│   └── UserResponse.java
-│
-├── entity/
-│   ├── User.java
-│   └── Role.java
-│
-├── exception/
-│   └── InvalidCredentialsException.java
-│
-├── filter/
-│   └── JwtAuthenticationFilter.java
-│
-├── repository/
-│   └── UserRepository.java
-│
-├── security/
-│   └── CustomUserDetailsService.java
-│
-├── service/
-│   ├── UserService.java
-│   ├── JwtService.java
-│   └── impl/
-│       ├── UserServiceImpl.java
-│       └── JwtServiceImpl.java
+
+This method tells Spring Security:
+
+- Which endpoints are public
+- Which endpoints are protected
+- Which filters should execute
+- In what order they should execute
+
+---
+
+# Story 4 – CSRF
+
+Initially we wrote
+
+```java
+.csrf(csrf -> csrf.disable())
 ```
 
 ---
 
-## Files Added
+## What is CSRF?
 
-- User.java
-- Role.java
-- RegisterRequest.java
-- LoginRequest.java
-- LoginResponse.java
-- UserResponse.java
-- UserRepository.java
-- UserService.java
-- UserServiceImpl.java
-- JwtService.java
-- JwtServiceImpl.java
-- UserController.java
-- SecurityConfig.java
-- JwtAuthenticationFilter.java
-- CustomUserDetailsService.java
-- InvalidCredentialsException.java
+CSRF
 
----
-
-## Files Modified
-
-- build.gradle
-- application.properties
-
----
-
-## APIs Added
-
-| Method | Endpoint | Description |
-|---------|----------|-------------|
-| POST | `/api/auth/register` | Register a new user |
-| POST | `/api/auth/login` | Authenticate a user and return a JWT access token |
-
----
-
-## Security Configuration
-
-The following security features were configured during this sprint:
-
-- Spring Security integration.
-- Password hashing using BCrypt.
-- Stateless authentication using JWT.
-- Public endpoint configuration.
-- Protected endpoint configuration.
-- JWT validation for every authenticated request.
-- Custom authentication filter registration.
-- Authentication context management using Spring Security.
-
-Public endpoints:
-
-- `POST /api/auth/register`
-- `POST /api/auth/login`
-- Swagger UI
-- OpenAPI documentation
-
-Protected endpoints:
-
-- All Task Management APIs.
-- Any endpoint requiring authenticated access.
-
----
-
-## Dependencies Added
-
-### Spring Security
-
-```gradle
-implementation 'org.springframework.boot:spring-boot-starter-security'
+```
+Cross Site Request Forgery
 ```
 
-### JWT
+It is an attack where another website forces a logged-in user to perform an unwanted action.
 
-```gradle
-implementation 'io.jsonwebtoken:jjwt-api:0.12.6'
+Example:
 
-runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.6'
+User logged into Banking App.
 
-runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.6'
+Visits a malicious website.
+
+The malicious website silently submits:
+
+```
+Transfer ₹10000
+```
+
+The browser automatically sends session cookies.
+
+The bank thinks the request came from the user.
+
+---
+
+## Why disable CSRF?
+
+Our application uses:
+
+```
+JWT
+```
+
+instead of
+
+```
+Sessions
+```
+
+JWT is sent manually using
+
+```
+Authorization
+
+Bearer <JWT>
+```
+
+No session cookie.
+
+Therefore CSRF protection is unnecessary for our REST API.
+
+---
+
+# Story 5 – Public vs Protected Endpoints
+
+Initially we configured
+
+```java
+.anyRequest().permitAll()
+```
+
+Meaning:
+
+```
+Everyone
+
+↓
+
+Everything
+```
+
+Useful while building the application.
+
+---
+
+Later we changed to
+
+```java
+.requestMatchers(
+    "/api/auth/register",
+    "/api/auth/login"
+).permitAll()
+
+.anyRequest().authenticated()
+```
+
+Meaning:
+
+Public
+
+```
+Register
+
+Login
+
+Swagger
+```
+
+Protected
+
+```
+Tasks
+
+Future APIs
 ```
 
 ---
 
-## Challenges Faced
+# Story 6 – Constructor Injection
 
-During implementation, several security-related challenges were encountered:
+Throughout the sprint we followed Constructor Injection.
 
-- Understanding the Spring Security authentication lifecycle.
-- Configuring stateless authentication using JWT.
-- Designing secure user registration and login workflows.
-- Implementing password hashing using BCrypt.
-- Protecting REST APIs without affecting public endpoints.
-- Integrating JWT validation into every incoming request.
-- Managing authentication using the Spring Security context.
+Example:
 
-These challenges provided a deeper understanding of authentication and authorization mechanisms in Spring Boot.
+```java
+private final UserRepository userRepository;
 
----
-
-## Lessons Learned
-
-- Fundamentals of Spring Security.
-- Difference between authentication and authorization.
-- Password hashing using BCrypt.
-- JWT generation and validation.
-- Stateless authentication.
-- Request filtering using `OncePerRequestFilter`.
-- Loading authenticated users using `UserDetailsService`.
-- Managing authenticated users through `SecurityContextHolder`.
-- Securing REST APIs using JWT authentication.
+public UserServiceImpl(UserRepository userRepository) {
+    this.userRepository = userRepository;
+}
+```
 
 ---
 
-## Outcome
+## Why Constructor Injection?
 
-Sprint 03 introduced a complete authentication system into the Cloud Native Task Management Platform.
+Advantages:
 
-Users can now securely register and authenticate using email and password credentials. Passwords are stored securely using BCrypt hashing, while JWT access tokens provide stateless authentication for protected APIs.
-
-The backend is now prepared for advanced authorization features, user-specific resource access, refresh tokens, and role-based access control in future sprints.
+- Mandatory dependencies.
+- Immutable fields.
+- Easier unit testing.
+- Recommended by Spring.
+- Prevents NullPointerException caused by missing dependencies.
 
 ---
 
-## Next Sprint
+## Why not Field Injection?
 
-Sprint 04 focuses on improving application functionality and preparing the backend for production-ready features, including:
+Example:
 
-- Task ownership and user-specific access
-- Refresh token implementation
-- Role-based authorization
-- Pagination and sorting
-- Search and filtering
-- API enhancements
-- Unit and integration testing
+```java
+@Autowired
+private UserRepository repository;
+```
+
+Problems:
+
+- Harder to test.
+- Mutable dependency.
+- Hidden dependency.
+
+Constructor Injection makes dependencies explicit.
+
+---
+
+# Story 7 – Project Architecture
+
+After Sprint 3 the backend architecture became
+
+```
+Controller
+
+↓
+
+Service
+
+↓
+
+Repository
+
+↓
+
+Database
+```
+
+Security layer
+
+```
+Request
+
+↓
+
+Security Filter Chain
+
+↓
+
+JWT Filter
+
+↓
+
+Controller
+
+↓
+
+Service
+
+↓
+
+Repository
+
+↓
+
+Database
+```
+
+---
+
+# Important Interview Questions
+
+## Q1. Difference between Authentication and Authorization?
+
+Authentication
+
+```
+Who are you?
+```
+
+Authorization
+
+```
+What are you allowed to access?
+```
+
+---
+
+## Q2. Why use Spring Security?
+
+- Secure REST APIs
+- Authentication
+- Authorization
+- Password Encryption
+- Security Filters
+- Easy integration with JWT
+
+---
+
+## Q3. Why use SecurityFilterChain?
+
+To configure Spring Security without extending deprecated adapters and to define how requests should be secured.
+
+---
+
+## Q4. Why disable CSRF?
+
+Because our backend uses stateless JWT authentication instead of session-based authentication.
+
+---
+
+## Q5. Why Constructor Injection?
+
+Because it provides immutable dependencies, better testing support, and follows Spring Boot best practices.
+
+---
+
+# Key Takeaways
+
+- Spring Security intercepts every request.
+- Authentication and Authorization are different concepts.
+- SecurityFilterChain controls application security.
+- JWT applications generally disable CSRF.
+- Constructor Injection should be preferred over field injection.
+- Public and protected endpoints should be explicitly configured.
