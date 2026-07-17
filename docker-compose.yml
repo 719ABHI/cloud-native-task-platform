@@ -1,0 +1,26 @@
+services:
+  backend:
+    build: ./task-management-backend
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/cloud_native_task_platform
+      SPRING_DATASOURCE_USERNAME: cloud_native_user
+      SPRING_DATASOURCE_PASSWORD: Abhi@123
+    depends_on:
+      - postgres
+
+
+
+  postgres :
+    image: postgres:16
+    environment:
+      POSTGRES_DB: cloud_native_task_platform
+      POSTGRES_USER: cloud_native_user
+      POSTGRES_PASSWORD: Abhi@123
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+
+volumes:
+  postgres_data:
