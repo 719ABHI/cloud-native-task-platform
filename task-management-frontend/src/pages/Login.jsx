@@ -1,6 +1,10 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { login } from "../services/authService";
-import { saveToken } from "../utils/token";
+import {
+    getToken,
+    saveToken,
+    saveUser,
+} from "../utils/token";
 import { useNavigate } from "react-router-dom";
 
 import {
@@ -19,6 +23,13 @@ function Login() {
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
+    useEffect(() => {
+
+        if (getToken()) {
+            navigate("/dashboard");
+        }
+
+    }, [navigate]);
 
     const handleLogin = async () => {
         setError("");
@@ -27,7 +38,11 @@ function Login() {
 
             const response = await login(email, password);
 
+            console.log(response);
+
             saveToken(response.accessToken);
+
+            saveUser(response.user);
 
             navigate("/dashboard");
 
@@ -98,6 +113,13 @@ function Login() {
                         onClick={handleLogin}
                     >
                         {loading ? "Logging in..." : "Login"}
+                    </Button>
+
+                    <Button
+                        variant="text"
+                        onClick={() => navigate("/register")}
+                    >
+                        Create Account
                     </Button>
                 </Box>
             </Paper>

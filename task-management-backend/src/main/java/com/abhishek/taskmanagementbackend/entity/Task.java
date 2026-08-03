@@ -29,6 +29,10 @@ public class Task extends BaseEntity{
     @Column
     private LocalDate dueDate;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
+
 
 
     public Task() {
@@ -91,4 +95,12 @@ public class Task extends BaseEntity{
         this.dueDate = dueDate;
     }
 
+
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
+    }
 }

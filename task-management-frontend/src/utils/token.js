@@ -9,3 +9,33 @@ export const getToken = () => {
 export const removeToken = () => {
     localStorage.removeItem("accessToken");
 };
+
+// -----------------------------
+// User Information
+// -----------------------------
+
+export const saveUser = (user) => {
+    localStorage.setItem("user", JSON.stringify(user));
+};
+
+export const getUser = () => {
+
+    const user = localStorage.getItem("user");
+
+    return user ? JSON.parse(user) : null;
+};
+
+export const removeUser = () => {
+    localStorage.removeItem("user");
+};
+
+// -----------------------------
+// Logout
+// -----------------------------
+
+export const logout = () => {
+
+    removeToken();
+    removeUser();
+
+};

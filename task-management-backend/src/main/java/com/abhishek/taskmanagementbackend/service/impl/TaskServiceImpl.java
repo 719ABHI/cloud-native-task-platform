@@ -7,6 +7,9 @@ import com.abhishek.taskmanagementbackend.service.TaskService;
 import org.springframework.stereotype.Service;
 import com.abhishek.taskmanagementbackend.dto.TaskRequest;
 import com.abhishek.taskmanagementbackend.dto.TaskResponse;
+import com.abhishek.taskmanagementbackend.entity.User;
+import com.abhishek.taskmanagementbackend.repository.UserRepository;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,11 +31,15 @@ public class TaskServiceImpl implements TaskService {
             LoggerFactory.getLogger(TaskServiceImpl.class);
 
     private final TaskRepository taskRepository;
+    private final UserRepository userRepository;
     // Constructor Injection for TaskRepository.
-    public TaskServiceImpl(TaskRepository taskRepository) {
-        this.taskRepository = taskRepository;
-    }
+    public TaskServiceImpl(
+            TaskRepository taskRepository,
+            UserRepository userRepository) {
 
+        this.taskRepository = taskRepository;
+        this.userRepository = userRepository;
+    }
     /**
      * Converts the client request DTO into a Task entity.
      */
@@ -68,6 +75,19 @@ public class TaskServiceImpl implements TaskService {
         return response;
     }
 
+    private User getCurrentUser() {
+
+        String email = SecurityContextHolder
+                .getContext()
+                .getAuthentication()
+                .getName();
+
+        return userRepository.findByEmail(email)
+                .orElseThrow(() ->
+                        new RuntimeException("User not found"));
+
+    }
+
     /**
      * Creates a new task.
 
@@ -84,6 +104,7 @@ public class TaskServiceImpl implements TaskService {
     public TaskResponse createTask(TaskRequest request) {
 
         Task task = mapToEntity(request);
+        task.setUser(getCurrentUser());
 
         Task savedTask = taskRepository.save(task);
 
@@ -101,7 +122,9 @@ public class TaskServiceImpl implements TaskService {
 
         logger.info("Fetching all tasks");
 
-        List<Task> tasks = taskRepository.findAll();
+        User currentUser = getCurrentUser();
+
+        List<Task> tasks = taskRepository.findByUser(currentUser);
 
         List<TaskResponse> responses = new ArrayList<>();
 
@@ -124,7 +147,8 @@ public class TaskServiceImpl implements TaskService {
 
         logger.info("Fetching task with ID: {}", id);
 
-        Task existingTask = taskRepository.findById(id)
+        Task existingTask = taskRepository
+                .findByIdAndUser(id, getCurrentUser())
                 .orElseThrow(() -> new TaskNotFoundException(id));
 
         return mapToResponse(existingTask);
@@ -134,7 +158,8 @@ public class TaskServiceImpl implements TaskService {
     public TaskResponse updateTask(Long id, TaskRequest request) {
 
         logger.info("Updating task with ID: {}", id);
-        Task existingTask = taskRepository.findById(id)
+        Task existingTask = taskRepository
+                .findByIdAndUser(id, getCurrentUser())
                 .orElseThrow(() -> new TaskNotFoundException(id));
 
 
@@ -155,7 +180,8 @@ public class TaskServiceImpl implements TaskService {
     public void deleteTask(Long id) {
 
         logger.info("Deleting task with ID: {}", id);
-        Task existingTask = taskRepository.findById(id)
+        Task existingTask = taskRepository
+                .findByIdAndUser(id, getCurrentUser())
                 .orElseThrow(() -> new TaskNotFoundException(id));
 
 
