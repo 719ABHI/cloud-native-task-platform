@@ -56,7 +56,8 @@ public class SecurityConfig {
                                 "/api/auth/register",
                                 "/api/auth/login",
                                 "/swagger-ui/**",
-                                "/v3/api-docs/**"
+                                "/v3/api-docs/**",
+                                "/actuator/health/**"
                         ).permitAll()
 
                         // Every other endpoint requires authentication.
@@ -83,7 +84,8 @@ public class SecurityConfig {
       configuration.setAllowedOrigins(
         List.of(
                 "http://localhost:5173",
-                "http://localhost:3000"
+                "http://localhost:3000",
+                "http://192.168.49.2:30082"
         ));
 
         configuration.setAllowedMethods(

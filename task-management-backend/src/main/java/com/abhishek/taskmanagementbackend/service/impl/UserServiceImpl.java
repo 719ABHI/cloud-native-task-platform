@@ -4,6 +4,7 @@ import com.abhishek.taskmanagementbackend.dto.RegisterRequest;
 import com.abhishek.taskmanagementbackend.dto.UserResponse;
 import com.abhishek.taskmanagementbackend.entity.Role;
 import com.abhishek.taskmanagementbackend.entity.User;
+import com.abhishek.taskmanagementbackend.exception.UserAlreadyExistsException;
 import com.abhishek.taskmanagementbackend.repository.UserRepository;
 import com.abhishek.taskmanagementbackend.service.JwtService;
 import com.abhishek.taskmanagementbackend.service.UserService;
@@ -71,11 +72,11 @@ public class UserServiceImpl implements UserService {
     public UserResponse registerUser(RegisterRequest request) {
 
         if (userRepository.existsByEmail(request.getEmail())) {
-            throw new RuntimeException("Email already exists");
+            throw new UserAlreadyExistsException("Email already exists");
         }
 
         if (userRepository.existsByUsername(request.getUsername())) {
-            throw new RuntimeException("Username already exists");
+            throw new UserAlreadyExistsException("Username already exists");
         }
 
         User user = mapToEntity(request);

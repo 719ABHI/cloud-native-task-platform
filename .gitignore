@@ -10,3 +10,7 @@ build/
 
 # OS
 .DS_Store
+
+# Kubernetes local secrets
+kubernetes/backend-secret.yaml
+kubernetes/postgres-secret.yaml
