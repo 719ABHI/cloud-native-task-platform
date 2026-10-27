@@ -14,6 +14,29 @@ jobs:
   build-and-test:
     runs-on: ubuntu-latest
 
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: task_platform_test
+          POSTGRES_USER: ci_user
+          POSTGRES_PASSWORD: ci_test_password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U ci_user -d task_platform_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        
+
+    env:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/task_platform_test
+      SPRING_DATASOURCE_USERNAME: ci_user
+      SPRING_DATASOURCE_PASSWORD: ci_test_password
+
+
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
