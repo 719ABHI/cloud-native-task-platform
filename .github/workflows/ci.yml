@@ -70,8 +70,29 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Build backend Docker image
-        run: docker build -t task-management-backend:ci ./task-management-backend
+      - name: Login to Docker Hub
+        if: github.event_name == 'push'
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build frontend Docker image
-        run: docker build -t task-management-frontend:ci ./task-management-frontend
+      - name: Build and push backend Docker image
+        if: github.event_name == 'push'
+        uses: docker/build-push-action@v6
+        with:
+          context: ./task-management-backend
+          push: true
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/task-management-backend:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/task-management-backend:sha-${{ github.sha }}
+
+      - name: Build and push frontend Docker image
+        if: github.event_name == 'push'
+        uses: docker/build-push-action@v6
+        with:
+          context: ./task-management-frontend
+          push: true
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/task-management-frontend:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/task-management-frontend:sha-${{ github.sha }}
